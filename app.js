@@ -142,6 +142,7 @@ var UIController = (function () {
     expensesLabel: '.budget__expenses--value',
     percentageLabel: '.budget__expenses--percentage',
     container: '.container',
+    expensePercLabel: '.item__percentage'
   };
   return {
     getInput: function () {
@@ -208,6 +209,23 @@ var UIController = (function () {
       }
 
     },
+    displayPercentages: function(percentages) {
+      var fiels = document.querySelectorAll(DOMStrings.expensePercLabel);
+      // reusable Code with CallBack loop for
+      var nodeListForEach = function (list, cb) {
+        for (var i = 0; i < list.length; i++) {
+          cb(list[i], i);
+        }
+      };
+      nodeListForEach(fiels,function (current, index) {
+        if (percentages[index] > 0) {
+          current.textContent = percentages[index] + '%';
+        } else {
+          current.textContent = '---';
+        }
+      })
+
+    },
     getDOMString: function () {
       return DOMStrings
     }
@@ -244,12 +262,12 @@ var controller = (function (budgetCtrl, UIctrl) {
   };
   var updatePercentages = function () {
     // 1. Calculate the percentages
-      budgetController.calculatePercentages();
+    budgetController.calculatePercentages();
     // 2. Read percentages from the bidget controller
-      var percentages = budgetController.getPercentages();
+    var percentages = budgetController.getPercentages();
     //  Update the UI with percentages
-    console.log(percentages)
-  }
+    UIController.displayPercentages(percentages);
+  };
   var ctrlAddItem = function () {
     var input, newItem;
     // 1. Get fields input data
@@ -279,7 +297,6 @@ var controller = (function (budgetCtrl, UIctrl) {
       // 1. Delete item from the data structure
       budgetController.deleteItem(type, id);
       //2. Delete item from the UI
-
       UIController.deleteListItem(itemID);
       // 3. Update and show the new budget
       updateBudjet();
