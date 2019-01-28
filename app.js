@@ -142,6 +142,25 @@ var UIController = (function () {
     expensesLabel: '.budget__expenses--value',
     percentageLabel: '.budget__expenses--percentage',
     container: '.container',
+    expensePercLabel: '.item__percentage',
+    currentDate: '.budget__title--month',
+  };
+  var  formatNumber = function(num, type) {
+    var numSplit, int, dec;
+    num = Math.abs(num);
+    num = num.toFixed(2);
+    numSplit = num.split('.');
+    int = numSplit[0];
+    dec = numSplit[1];
+    if(int.length > 3) {
+      int = int.substr(0,int.length - 3) + ',' + int.substr(int.length - 3 ,int.length);
+    }
+    return (type === 'exp' ? '-' : '+') + ' ' + int + '.' +dec;
+  };
+  var nodeListForEach = function (list, cb) {
+    for (var i = 0; i < list.length; i++) {
+      cb(list[i], i);
+    }
   };
   return {
     getInput: function () {
@@ -159,7 +178,7 @@ var UIController = (function () {
         html = `<div class="item clearfix" id="inc-${obj.id}">
                 <div class="item__description">${obj.description}</div>
                   <div class="right clearfix">
-                    <div class="item__value">+ ${obj.value}</div>
+                    <div class="item__value">${formatNumber(obj.value, type)}</div>
                     <div class="item__delete">
                       <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
                     </div>
@@ -171,7 +190,7 @@ var UIController = (function () {
         html = `<div class="item clearfix" id="exp-${obj.id}">
               <div class="item__description">${obj.description}</div>
               <div class="right clearfix">
-                <div class="item__value">${obj.value}</div>
+                <div class="item__value">${formatNumber(obj.value, type)}</div>
                 <div class="item__percentage">21%</div>
                 <div class="item__delete">
                     <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
@@ -197,9 +216,11 @@ var UIController = (function () {
       fieldsArr[0].focus()
     },
     displayBudget: function (obj) {
-      document.querySelector(DOMStrings.budgetLabel).textContent = obj.budget;
-      document.querySelector(DOMStrings.incomesLabel).textContent = obj.totalInc;
-      document.querySelector(DOMStrings.expensesLabel).textContent = obj.totalExp;
+      var type;
+      obj.budget > 0 ? type = 'inc' : type = 'exp';
+      document.querySelector(DOMStrings.budgetLabel).textContent = formatNumber(obj.budget, type);
+      document.querySelector(DOMStrings.incomesLabel).textContent = formatNumber(obj.totalInc, 'inc');
+      document.querySelector(DOMStrings.expensesLabel).textContent = formatNumber(obj.totalExp, 'exp');
       if (obj.purcentage > 0) {
         document.querySelector(DOMStrings.percentageLabel).textContent = obj.purcentage + '%';
       } else {
@@ -208,6 +229,37 @@ var UIController = (function () {
       }
 
     },
+    displayPercentages: function(percentages) {
+      var fiels = document.querySelectorAll(DOMStrings.expensePercLabel);
+      // reusable Code with CallBack loop for
+
+      nodeListForEach(fiels,function (current, index) {
+        if (percentages[index] > 0) {
+          current.textContent = percentages[index] + '%';
+        } else {
+          current.textContent = '---';
+        }
+      })
+
+    },
+    displayDate: function () {
+      var date, year, month, monthNames;
+      date = new Date();
+      year = date.getFullYear();
+      month = date.getMonth();
+      monthNames = ["Jan", "Fev", "Mars", "Avril", "Mai", "Juin",
+        "Juil", "Aôut", "Sept", "Oct", "Nov", "Dec"
+      ];
+      document.querySelector(DOMStrings.currentDate).textContent = monthNames[month].toLocaleUpperCase() + ' ' + year;
+    },
+    changeType: function () {
+      var fields = document.querySelectorAll( DOMStrings.typeString +','+DOMStrings.descString +','+ DOMStrings.valString);
+      nodeListForEach(fields, function (item) {
+        item.classList.toggle('red-focus')
+      })
+      var btn = document.querySelector(DOMStrings.addBuntton);
+      btn.classList.toggle('red')
+      },
     getDOMString: function () {
       return DOMStrings
     }
@@ -230,7 +282,9 @@ var controller = (function (budgetCtrl, UIctrl) {
         // same as the actions of the button
       }
     });
-    document.querySelector(DOM.container).addEventListener('click', ctrlDelItem)
+    document.querySelector(DOM.container).addEventListener('click', ctrlDelItem);
+
+    document.querySelector(DOM.typeString).addEventListener('change', UIController.changeType);
   };
 
 
@@ -244,12 +298,12 @@ var controller = (function (budgetCtrl, UIctrl) {
   };
   var updatePercentages = function () {
     // 1. Calculate the percentages
-      budgetController.calculatePercentages();
+    budgetController.calculatePercentages();
     // 2. Read percentages from the bidget controller
-      var percentages = budgetController.getPercentages();
+    var percentages = budgetController.getPercentages();
     //  Update the UI with percentages
-    console.log(percentages)
-  }
+    UIController.displayPercentages(percentages);
+  };
   var ctrlAddItem = function () {
     var input, newItem;
     // 1. Get fields input data
@@ -263,6 +317,7 @@ var controller = (function (budgetCtrl, UIctrl) {
       UIController.addListItem(newItem, input.type);
       // 4. Clear Fields
       UIController.clearFields();
+
       // 5. Calculate abd update data
       updateBudjet();
       // 6. Update percentages
@@ -279,12 +334,12 @@ var controller = (function (budgetCtrl, UIctrl) {
       // 1. Delete item from the data structure
       budgetController.deleteItem(type, id);
       //2. Delete item from the UI
-
       UIController.deleteListItem(itemID);
       // 3. Update and show the new budget
       updateBudjet();
       // 4. Update percentages
       updatePercentages();
+      UIController.changeType();
     }
   };
   return {
@@ -295,6 +350,8 @@ var controller = (function (budgetCtrl, UIctrl) {
         totalExp: 0,
         purcentage: -1,
       });
+      //  display date
+      UIController.displayDate();
       setupEventListeners();
     },
   };
