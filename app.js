@@ -157,6 +157,11 @@ var UIController = (function () {
     }
     return (type === 'exp' ? '-' : '+') + ' ' + int + '.' +dec;
   };
+  var nodeListForEach = function (list, cb) {
+    for (var i = 0; i < list.length; i++) {
+      cb(list[i], i);
+    }
+  };
   return {
     getInput: function () {
       return {
@@ -227,11 +232,7 @@ var UIController = (function () {
     displayPercentages: function(percentages) {
       var fiels = document.querySelectorAll(DOMStrings.expensePercLabel);
       // reusable Code with CallBack loop for
-      var nodeListForEach = function (list, cb) {
-        for (var i = 0; i < list.length; i++) {
-          cb(list[i], i);
-        }
-      };
+
       nodeListForEach(fiels,function (current, index) {
         if (percentages[index] > 0) {
           current.textContent = percentages[index] + '%';
@@ -251,6 +252,14 @@ var UIController = (function () {
       ];
       document.querySelector(DOMStrings.currentDate).textContent = monthNames[month].toLocaleUpperCase() + ' ' + year;
     },
+    changeType: function () {
+      var fields = document.querySelectorAll( DOMStrings.typeString +','+DOMStrings.descString +','+ DOMStrings.valString);
+      nodeListForEach(fields, function (item) {
+        item.classList.toggle('red-focus')
+      })
+      var btn = document.querySelector(DOMStrings.addBuntton);
+      btn.classList.toggle('red')
+      },
     getDOMString: function () {
       return DOMStrings
     }
@@ -273,7 +282,9 @@ var controller = (function (budgetCtrl, UIctrl) {
         // same as the actions of the button
       }
     });
-    document.querySelector(DOM.container).addEventListener('click', ctrlDelItem)
+    document.querySelector(DOM.container).addEventListener('click', ctrlDelItem);
+
+    document.querySelector(DOM.typeString).addEventListener('change', UIController.changeType);
   };
 
 
@@ -328,6 +339,7 @@ var controller = (function (budgetCtrl, UIctrl) {
       updateBudjet();
       // 4. Update percentages
       updatePercentages();
+      UIController.changeType();
     }
   };
   return {
