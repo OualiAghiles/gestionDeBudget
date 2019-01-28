@@ -142,7 +142,8 @@ var UIController = (function () {
     expensesLabel: '.budget__expenses--value',
     percentageLabel: '.budget__expenses--percentage',
     container: '.container',
-    expensePercLabel: '.item__percentage'
+    expensePercLabel: '.item__percentage',
+    currentDate: '.budget__title--month',
   };
   var  formatNumber = function(num, type) {
     var numSplit, int, dec;
@@ -240,6 +241,16 @@ var UIController = (function () {
       })
 
     },
+    displayDate: function () {
+      var date, year, month, monthNames;
+      date = new Date();
+      year = date.getFullYear();
+      month = date.getMonth();
+      monthNames = ["Jan", "Fev", "Mars", "Avril", "Mai", "Juin",
+        "Juil", "Aôut", "Sept", "Oct", "Nov", "Dec"
+      ];
+      document.querySelector(DOMStrings.currentDate).textContent = monthNames[month].toLocaleUpperCase() + ' ' + year;
+    },
     getDOMString: function () {
       return DOMStrings
     }
@@ -295,6 +306,7 @@ var controller = (function (budgetCtrl, UIctrl) {
       UIController.addListItem(newItem, input.type);
       // 4. Clear Fields
       UIController.clearFields();
+
       // 5. Calculate abd update data
       updateBudjet();
       // 6. Update percentages
@@ -326,6 +338,8 @@ var controller = (function (budgetCtrl, UIctrl) {
         totalExp: 0,
         purcentage: -1,
       });
+      //  display date
+      UIController.displayDate();
       setupEventListeners();
     },
   };
